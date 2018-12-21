@@ -1,0 +1,313 @@
+/***********************************************
+	Liam Hendrickson
+	CS 2401 - John Dolan
+	Project 4
+	Ohio University
+***********************************************/
+
+#include "dlist.h"
+#include "iterator.h"
+#include "dnode.h"
+
+template<class D>
+dlist <D>::dlist()
+{
+	head=tail=NULL;	
+	count=0;
+}
+
+template<class D>
+dlist <D>::~dlist()
+{
+	Dnode<D>* cursor=head;
+
+	while(cursor->next() != NULL) 
+	{
+		cursor = cursor->next();
+		delete cursor->prev();
+	}
+	delete cursor;
+}
+
+template<class D>
+dlist <D>::dlist(const dlist& other)
+{
+	if(other.head==NULL)
+	{
+		head=tail=NULL;
+		count=0;
+		return;
+	}
+	else
+	{
+		Dnode<D>* cursor=other.head;
+		count=0;
+		head=tail=NULL;
+		while(cursor!=NULL)
+		{
+			Dnode<D>* tmp= new Dnode<D>(cursor->data());
+			if(count==0)
+				head=tail=tmp;
+			else
+			{
+				tail->set_next(tmp);
+				tmp->set_prev(tail);
+				tail= tail->next();
+			}
+			++count;
+			cursor= cursor->next();
+		}
+	}
+}
+
+template<class D>
+dlist<D>& dlist<D>::operator =(const dlist& other)
+{
+	if(head==other.head)//checks self assignment
+		return *this;
+
+	Dnode<D>* cursor=other.head;
+	Dnode<D>* rmptr;
+
+	while(head!=NULL)
+	{
+		rmptr=head;
+		head=head->next();
+		delete rmptr;
+	}
+	count=0;
+
+	if(other.head==other.tail &&other.tail==NULL)//checks empty list
+	{
+		head=tail=NULL;
+		count=0;
+		return *this;
+	}
+
+
+
+	head=tail= new Dnode<D>(other.head->data());
+	count++;
+	while(cursor->next()!=NULL)
+	{
+		rear_insert(cursor->next()->data());
+		cursor = cursor->next();
+	}
+	return *this;
+}
+template<class D>
+void dlist <D>::rear_insert(D item)
+{
+	if(tail==NULL)
+	{
+		head=tail=new Dnode<D>(item);
+		count++;
+		return;
+	}
+	tail->set_next(new Dnode<D>(item, tail));
+	tail = tail->next();
+	count++;
+}
+
+template<class D>
+void dlist<D>::remove(itr<D>& it)
+{
+	if(head==NULL)
+		return;
+	Dnode<D>* tmpptr = tail->prev();
+
+	while(tmpptr!=NULL)
+	{
+		if(tmpptr==it.current)
+			break;
+		tmpptr=tmpptr->prev();
+		
+	}
+	if(tmpptr==NULL)
+		return;
+
+	else
+	{
+		Dnode<D>* tmp_after=tmpptr->next();
+		Dnode<D>* tmp_before=tmpptr->prev();
+		if( tmp_after==NULL)
+			tail->set_prev(tmp_before);
+		else
+			tmp_after->set_prev(tmp_before);
+		if(tmp_before==NULL)
+			head->set_next(tmp_after);
+		else
+			tmp_before->set_next(tmp_after);
+		delete tmpptr;
+		--count;
+	}
+
+
+
+}
+template<class D>
+void dlist<D>::insert_before(itr<D> x,D item)
+{
+        if(head==NULL)
+                return;
+        Dnode<D>* tmpptr=head->next();
+
+        while( tmpptr !=NULL)
+        {
+                if(tmpptr==x.current->prev())
+                        break;
+                tmpptr=tmpptr->next();
+        }
+
+        if(tmpptr==NULL)
+                return;
+
+        else
+        {
+                Dnode<D>* tmp_prev=tmpptr->prev();
+                Dnode<D>* tmp=new Dnode<D>(item,tmp_prev, tmpptr);
+                if(tmp_prev==NULL)
+                        head->set_next(tmp);
+                else
+                        tmp_prev->set_next(tmp);
+
+                tmpptr->set_prev(tmp);
+                ++count;
+        }
+
+
+}
+
+template<class D>
+void dlist<D>::insert_after(itr<D> x,D item)
+{
+	if(head==NULL)
+		return;
+	Dnode<D>* tmpptr=head->next();
+
+	while( tmpptr !=NULL)
+	{
+		if(tmpptr==x.current->prev())
+			break;
+		tmpptr=tmpptr->next();
+	}
+
+	if(tmpptr==NULL)
+		return;
+
+	else
+	{
+		Dnode<D>* tmp_next=tmpptr->next();
+		Dnode<D>* tmp=new Dnode<D>(item,tmpptr, tmp_next);
+		if(tmp_next==NULL)
+			tail->set_prev(tmp);
+		else
+			tmp_next->set_prev(tmp);
+
+		tmpptr->set_next(tmp);
+		++count;
+	}
+
+		 
+}
+template<class D>
+void dlist<D>::show()const
+{
+	Dnode<D>* cursor=head;
+
+	if(head==NULL)
+		return;
+
+	std::cout<<head->data()<<std::endl;
+
+	while(cursor->next() != NULL)
+	{
+		std::cout<<cursor->next()->data()<<std::endl;
+		cursor = cursor->next();
+	}
+}
+
+template<class D>
+void dlist<D>::reverse_show()const
+{
+	Dnode<D>* cursor=tail;
+
+	if(tail==NULL)
+		return;
+
+	std::cout<<tail->data()<<std::endl;
+
+	while(cursor->prev() != NULL)
+	{
+		std::cout<<cursor->prev()->data()<<std::endl;
+		cursor = cursor->prev();
+	}
+}
+
+
+
+template<class D>
+void dlist <D>::front_insert(D item)
+{
+	++count;
+        if(head==NULL)
+        {
+                head=tail=new Dnode<D>(item);
+                return;
+        }
+        head->set_prev(new Dnode<D>(item, NULL, head));
+        head = head->prev();
+}
+
+template<class D>
+void dlist <D>::rear_remove()
+{
+	if(tail==NULL)
+		return;
+
+	if(head==tail)
+	{
+		delete tail;
+		count=0;
+		head=tail=NULL;
+		return;
+	}
+	else
+	{
+		Dnode<D>* removed=tail;
+
+		tail = tail->prev();
+
+		tail->set_next(NULL);
+
+		delete removed;
+		--count;
+	}
+}
+
+template<class D>
+void dlist<D>::front_remove()
+{
+	if(head==NULL)
+		return;
+
+	if(head==tail)
+	{
+		delete head;
+		count=0;
+		head=tail=NULL;
+		return;
+	}
+	else
+	{
+
+		Dnode<D>* removed=head;
+
+		head = head->next();
+
+		head->set_prev(NULL);
+
+		delete removed;
+		--count;
+	}
+}
